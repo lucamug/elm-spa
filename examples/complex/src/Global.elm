@@ -7,7 +7,20 @@ module Global exposing
     , update
     )
 
+import Browser.Events
+import Counter
 import Generated.Routes as Routes exposing (Route, routes)
+import Json.Decode
+import Time
+import Utils.MembershipCounter
+import WebSocket
+
+
+
+-- type alias Flags =
+--     { width : Int
+--     , baseHref : String
+--     }
 
 
 type alias Flags =
@@ -16,12 +29,24 @@ type alias Flags =
 
 type alias Model =
     { user : Maybe String
+    , maybeCounter : Maybe Counter.Counter
+    , isApplicationsMenuOpen : Bool
+    , isNotificationsMenuOpen : Bool
+    , isSideMenuOpen : Bool
+    , width : Int
+    , baseHref : String
     }
 
 
 type Msg
     = SignIn String
     | SignOut
+    | OnAnimationFrame Time.Posix
+    | Websocket (Result Json.Decode.Error WebSocket.WebSocketMsg)
+    | ToggleMenuApplications
+    | ToggleMenuNotifications
+    | ToggleMenuSide
+    | OnResize Int Int
 
 
 type alias Commands msg =
@@ -31,8 +56,21 @@ type alias Commands msg =
 
 init : Commands msg -> Flags -> ( Model, Cmd Msg, Cmd msg )
 init _ _ =
-    ( { user = Nothing }
-    , Cmd.none
+    let
+        flags =
+            { width = 800
+            , baseHref = ""
+            }
+    in
+    ( { user = Nothing
+      , maybeCounter = Nothing
+      , isApplicationsMenuOpen = False
+      , isNotificationsMenuOpen = False
+      , isSideMenuOpen = flags.width > 1000
+      , width = flags.width
+      , baseHref = flags.baseHref
+      }
+    , Utils.MembershipCounter.init
     , Cmd.none
     )
 
@@ -52,7 +90,64 @@ update commands msg model =
             , Cmd.none
             )
 
+        OnResize x _ ->
+            ( { model | width = x }
+            , Cmd.none
+            , Cmd.none
+            )
+
+        ToggleMenuApplications ->
+            ( { model
+                | isApplicationsMenuOpen = not model.isApplicationsMenuOpen
+                , isNotificationsMenuOpen = False
+              }
+            , Cmd.none
+            , Cmd.none
+            )
+
+        ToggleMenuNotifications ->
+            ( { model
+                | isNotificationsMenuOpen = not model.isNotificationsMenuOpen
+                , isApplicationsMenuOpen = False
+              }
+            , Cmd.none
+            , Cmd.none
+            )
+
+        ToggleMenuSide ->
+            ( { model | isSideMenuOpen = not model.isSideMenuOpen }
+            , Cmd.none
+            , Cmd.none
+            )
+
+        OnAnimationFrame _ ->
+            ( { model | maybeCounter = Utils.MembershipCounter.updateOnAnimationFrame model.maybeCounter }
+            , Cmd.none
+            , Cmd.none
+            )
+
+        Websocket result ->
+            ( { model | maybeCounter = Utils.MembershipCounter.updateOnWebsocket model.maybeCounter result }
+            , Cmd.none
+            , Cmd.none
+            )
+
 
 subscriptions : Model -> Sub Msg
-subscriptions _ =
-    Sub.none
+subscriptions model =
+    Sub.batch
+        ([ Utils.MembershipCounter.wsreceive Websocket
+         , Browser.Events.onResize OnResize
+         ]
+            ++ (case model.maybeCounter of
+                    Nothing ->
+                        []
+
+                    Just counter ->
+                        if Counter.areMoving [ counter ] then
+                            [ Browser.Events.onAnimationFrame OnAnimationFrame ]
+
+                        else
+                            []
+               )
+        )

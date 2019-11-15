@@ -9,6 +9,7 @@ import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
 import Generated.Route
+import Global
 import Html
 import Html.Attributes
 import UI.Attrs
@@ -20,7 +21,7 @@ import UI.Size
 import UI.Spacing
 
 
-view : Maybe Counter.Counter -> Bool -> Bool -> Element msg
+view : Maybe Counter.Counter -> Bool -> Bool -> Element Global.Msg
 view maybeCounter isApplicationsMenuOpen isNotificationsMenuOpen =
     row
         [ width fill
