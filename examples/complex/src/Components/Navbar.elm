@@ -8,6 +8,7 @@ import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Element.Input as Input
 import Generated.Route
 import Global
 import Html
@@ -33,7 +34,10 @@ view maybeCounter isApplicationsMenuOpen isNotificationsMenuOpen =
         , htmlAttribute <| Html.Attributes.style "position" "fixed"
         , htmlAttribute <| Html.Attributes.style "z-index" "1"
         ]
-        [ el [ Font.size 30, centerX, moveUp 2 ] <| text "☰"
+        [ Input.button []
+            { label = el [ Font.size 30, centerX, moveUp 2 ] <| text "☰"
+            , onPress = Just <| Global.ToggleMenuSide
+            }
         , link []
             { label =
                 row [ spacing 10 ]
@@ -70,16 +74,16 @@ view maybeCounter isApplicationsMenuOpen isNotificationsMenuOpen =
 
                 Nothing ->
                     none
-            , el
+            , Input.button
                 (Components.NotificationsMenu.view isNotificationsMenuOpen)
-              <|
-                html <|
-                    UI.Icon.notice_generic_l_ UI.Color.fontHeaderAsString 30
-            , el
+                { label = html <| UI.Icon.notice_generic_l_ UI.Color.fontHeaderAsString 30
+                , onPress = Just <| Global.ToggleMenuNotifications
+                }
+            , Input.button
                 (Components.ApplicationsMenu.view isApplicationsMenuOpen)
-              <|
-                html <|
-                    UI.Icon.grid UI.Color.fontHeaderAsString 30
+                { label = html <| UI.Icon.grid UI.Color.fontHeaderAsString 30
+                , onPress = Just <| Global.ToggleMenuApplications
+                }
             , link
                 []
                 { url = ""
