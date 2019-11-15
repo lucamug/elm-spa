@@ -2,6 +2,7 @@ module Layout exposing (view)
 
 import App.Page
 import Components.Button
+import Components.Navbar
 import Components.Styles as Styles
 import Element exposing (..)
 import Element.Background as Background
@@ -36,7 +37,8 @@ view { page, global, toMsg } =
         , height fill
         , centerX
         ]
-        [ Element.map toMsg (viewNavbar global.user)
+        [ Components.Navbar.view Nothing False False
+        , Element.map toMsg (viewNavbar global.user)
         , page
         ]
 
@@ -62,7 +64,7 @@ viewNavbar user_ =
                 , url = "/"
                 }
                 :: List.map viewLink
-                    [ ( "docs", "/docs" )
+                    [ ( "xxxdocs", "/docs" )
                     , ( "guide", "/guide" )
                     ]
             )

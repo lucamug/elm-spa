@@ -3,9 +3,9 @@ module Generated.Route exposing
     , toPath
     )
 
-import Generated.Params as Params
 import Generated.Docs.Route
 import Generated.Guide.Route
+import Generated.Params as Params
 
 
 type Route
@@ -23,27 +23,21 @@ toPath route =
     case route of
         Docs _ ->
             "/docs"
-        
-        
+
         Guide _ ->
             "/guide"
-        
-        
+
         NotFound _ ->
             "/not-found"
-        
-        
+
         SignIn _ ->
             "/sign-in"
-        
-        
+
         Top _ ->
             "/top"
-        
-        
+
         Docs_Folder subRoute ->
             "/docs" ++ Generated.Docs.Route.toPath subRoute
-        
-        
+
         Guide_Folder subRoute ->
             "/guide" ++ Generated.Guide.Route.toPath subRoute

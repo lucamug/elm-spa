@@ -1,6 +1,10 @@
 module Generated.Params exposing (..)
 
 
+type alias Index =
+    {}
+
+
 type alias Docs =
     {}
 

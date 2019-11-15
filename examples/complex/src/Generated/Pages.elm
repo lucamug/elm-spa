@@ -5,19 +5,19 @@ module Generated.Pages exposing
     )
 
 import App.Page
-import Layout as Layout
-import Utils.Spa as Spa
+import Generated.Docs.Pages
+import Generated.Docs.Route
+import Generated.Guide.Pages
+import Generated.Guide.Route
 import Generated.Params as Params
 import Generated.Route as Route exposing (Route)
+import Layout as Layout
 import Pages.Docs
 import Pages.Guide
 import Pages.NotFound
 import Pages.SignIn
 import Pages.Top
-import Generated.Docs.Route
-import Generated.Guide.Route
-import Generated.Docs.Pages
-import Generated.Guide.Pages
+import Utils.Spa as Spa
 
 
 type Model
@@ -127,22 +127,22 @@ init route_ =
     case route_ of
         Route.Docs params ->
             recipes.docs.init params
-        
+
         Route.Guide params ->
             recipes.guide.init params
-        
+
         Route.NotFound params ->
             recipes.notFound.init params
-        
+
         Route.SignIn params ->
             recipes.signIn.init params
-        
+
         Route.Top params ->
             recipes.top.init params
-        
+
         Route.Docs_Folder route ->
             recipes.docs_folder.init route
-        
+
         Route.Guide_Folder route ->
             recipes.guide_folder.init route
 
@@ -156,26 +156,28 @@ update bigMsg bigModel =
     case ( bigMsg, bigModel ) of
         ( DocsMsg msg, DocsModel model ) ->
             recipes.docs.update msg model
-        
+
         ( GuideMsg msg, GuideModel model ) ->
             recipes.guide.update msg model
-        
+
         ( NotFoundMsg msg, NotFoundModel model ) ->
             recipes.notFound.update msg model
-        
+
         ( SignInMsg msg, SignInModel model ) ->
             recipes.signIn.update msg model
-        
+
         ( TopMsg msg, TopModel model ) ->
             recipes.top.update msg model
-        
+
         ( Docs_Folder_Msg msg, Docs_Folder_Model model ) ->
             recipes.docs_folder.update msg model
-        
+
         ( Guide_Folder_Msg msg, Guide_Folder_Model model ) ->
             recipes.guide_folder.update msg model
+
         _ ->
             App.Page.keep bigModel
+
 
 
 -- BUNDLE
@@ -186,21 +188,21 @@ bundle bigModel =
     case bigModel of
         DocsModel model ->
             recipes.docs.bundle model
-        
+
         GuideModel model ->
             recipes.guide.bundle model
-        
+
         NotFoundModel model ->
             recipes.notFound.bundle model
-        
+
         SignInModel model ->
             recipes.signIn.bundle model
-        
+
         TopModel model ->
             recipes.top.bundle model
-        
+
         Docs_Folder_Model model ->
             recipes.docs_folder.bundle model
-        
+
         Guide_Folder_Model model ->
             recipes.guide_folder.bundle model
