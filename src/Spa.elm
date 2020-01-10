@@ -32,6 +32,7 @@ as the entrypoint to your app.
                 { routes = Routes.parsers
                 , toPath = Routes.toPath
                 , notFound = routes.notFound
+                , beforeNavigate = Nothing
                 , afterNavigate = Nothing
                 }
             , transitions = Transitions.transitions
@@ -151,6 +152,7 @@ create :
         { routes : List (Parser (route -> route) route)
         , toPath : route -> String
         , notFound : route
+        , beforeNavigate : Maybe (globalModel -> { navigate : route -> Cmd (Msg globalMsg layoutMsg) } -> ({ newUrl : Url, oldUrl : Url, fromUrl : Url -> route } -> Maybe (Cmd (Msg globalMsg layoutMsg))))
         , afterNavigate : Maybe ({ old : route, new : route } -> globalMsg)
         }
     , transitions :
@@ -196,6 +198,7 @@ create config =
                     { fromUrl = fromUrl config.routing
                     , toPath = config.routing.toPath
                     , routes = config.routing.routes
+                    , beforeNavigate = config.routing.beforeNavigate
                     , afterNavigate = config.routing.afterNavigate
                     , transitions = pageTransitions config.transitions
                     }
@@ -334,6 +337,7 @@ update :
         { fromUrl : Url -> route
         , toPath : route -> String
         , routes : Routes route a
+        , beforeNavigate : Maybe (globalModel -> { navigate : route -> Cmd (Msg globalMsg layoutMsg) } -> ({ newUrl : Url, oldUrl : Url, fromUrl : Url -> route } -> Maybe (Cmd (Msg globalMsg layoutMsg))))
         , afterNavigate : Maybe ({ old : route, new : route } -> globalMsg)
         , transitions :
             List
@@ -407,6 +411,19 @@ update config msg model =
 
         ChangedUrl url ->
             let
+                maybeCommand =
+                    Maybe.withDefault
+                        Nothing
+                        (Maybe.map
+                            (\beforeNavigate ->
+                                beforeNavigate
+                                    model.global
+                                    { navigate = navigate config.routing.toPath model.url }
+                                    { fromUrl = config.routing.fromUrl, oldUrl = model.url, newUrl = url }
+                            )
+                            config.routing.beforeNavigate
+                        )
+
                 ( path, duration ) =
                     chooseFrom
                         { transitions = config.routing.transitions
@@ -418,31 +435,33 @@ update config msg model =
                         |> Maybe.map (\item -> ( item.path, Transition.duration item.transition ))
                         |> Maybe.withDefault ( [], 0 )
             in
-            ( { model
-                | url = url
-                , visibilities =
-                    { layout = Transition.visible
-                    , page = Transition.invisible
-                    }
-                , path = path
-              }
-            , Cmd.batch
-                [ Utils.delay
-                    duration
-                    (FadeInPage url)
-                , case config.routing.afterNavigate of
-                    Just toMsg ->
-                        (Utils.send >> Cmd.map Global)
-                            (toMsg
-                                { old = config.routing.fromUrl model.url
-                                , new = config.routing.fromUrl url
-                                }
-                            )
+            Maybe.withDefault
+                ( { model
+                    | url = url
+                    , visibilities =
+                        { layout = Transition.visible
+                        , page = Transition.invisible
+                        }
+                    , path = path
+                  }
+                , Cmd.batch
+                    [ Utils.delay
+                        duration
+                        (FadeInPage url)
+                    , case config.routing.afterNavigate of
+                        Just toMsg ->
+                            (Utils.send >> Cmd.map Global)
+                                (toMsg
+                                    { old = config.routing.fromUrl model.url
+                                    , new = config.routing.fromUrl url
+                                    }
+                                )
 
-                    Nothing ->
-                        Cmd.none
-                ]
-            )
+                        Nothing ->
+                            Cmd.none
+                    ]
+                )
+                (Maybe.map (\navigateCommand -> ( model, navigateCommand )) maybeCommand)
 
         Global globalMsg ->
             config.update.global
